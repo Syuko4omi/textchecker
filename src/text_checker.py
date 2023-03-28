@@ -1,4 +1,5 @@
 from module_length import length_checker
+from module_wordy import wordy_checker
 import re
 import streamlit as st
 from annotated_text import annotated_text
@@ -9,7 +10,9 @@ def create_sidebar():
     uploaded_files = st.sidebar.file_uploader(
         "テキストファイルを選んでください（今は使えません）", accept_multiple_files=False
     )
-    show_elements = st.sidebar.radio("表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文"))
+    show_elements = st.sidebar.radio(
+        "表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文", "冗長な表現")
+    )
     return uploaded_files, show_elements
 
 
@@ -53,7 +56,7 @@ def continuous_checker(
     for sentence_num, one_sentence in enumerate(sentences):
         if len(objective_func(one_sentence)):
             parts = re.split(r"(?<=、)", one_sentence)
-            problematic_parts = length_checker.find_too_less_punctuation(one_sentence)
+            problematic_parts = objective_func(one_sentence)
             for part in parts:
                 flag = False
                 for problematic_part in problematic_parts:
@@ -67,6 +70,35 @@ def continuous_checker(
                     text_position_list.append((f"{row_num}行目第{sentence_num+1}文", part))
                 else:
                     annotated_text_list.append(part)
+        else:
+            annotated_text_list.append(one_sentence)
+    return annotated_text_list, text_position_list
+
+
+def wordy_expression_checker(
+    sentences: list[str],
+    wordy_expression_dict=wordy_checker.create_wordy_expression_dict(),
+    objective_func=wordy_checker.wrapper_find_wordy_expression,
+):
+    annotated_text_list = []
+    text_position_list = []
+    for sentence_num, one_sentence in enumerate(sentences):
+        start_idx = 0
+        problematic_parts = objective_func(one_sentence, wordy_expression_dict)
+        if len(problematic_parts):
+            for problematic_part in problematic_parts:
+                problematic_part_start_idx = one_sentence.find(
+                    problematic_part, start_idx
+                )
+                annotated_text_list.append(
+                    one_sentence[start_idx:problematic_part_start_idx]
+                )
+                annotated_text_list.append((problematic_part, "冗長", "#009900"))
+                start_idx = problematic_part_start_idx + len(problematic_part)
+                text_position_list.append(
+                    (f"{row_num}行目第{sentence_num+1}文", problematic_part)
+                )
+            annotated_text_list.append(one_sentence[start_idx:])
         else:
             annotated_text_list.append(one_sentence)
     return annotated_text_list, text_position_list
@@ -86,6 +118,7 @@ if __name__ == "__main__":
         "長すぎる文": lengthy_checker,
         "読点が多い文": punctuation_num_checker,
         "読点がない文": continuous_checker,
+        "冗長な表現": wordy_expression_checker,
     }
     st.set_page_config(layout="wide")  # ページの横幅をフルに使う
     uploaded_files, show_elements = create_sidebar()
@@ -112,5 +145,6 @@ if __name__ == "__main__":
         annotated_text(*annotated_texts)
     with col3:
         st.header("指摘箇所")
+        st.write(f"{len(pos_list)}件見つかりました")
         for item in pos_list:
             st.write(f"{item[0]}  \n{item[1]}")
