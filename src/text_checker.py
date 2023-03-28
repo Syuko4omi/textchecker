@@ -1,4 +1,4 @@
-from module_length import punctuation
+from module_length import length_checker
 import re
 import streamlit as st
 from annotated_text import annotated_text
@@ -14,7 +14,7 @@ def create_sidebar():
 
 
 def lengthy_checker(
-    sentences: list[str], objective_func=punctuation.find_too_long_sentence
+    sentences: list[str], objective_func=length_checker.find_too_long_sentence
 ):
     annotated_text_list = []
     text_position_list = []
@@ -30,7 +30,7 @@ def lengthy_checker(
 
 
 def punctuation_num_checker(
-    sentences: list[str], objective_func=punctuation.find_too_much_punctuation
+    sentences: list[str], objective_func=length_checker.find_too_much_punctuation
 ):
     annotated_text_list = []
     text_position_list = []
@@ -46,14 +46,14 @@ def punctuation_num_checker(
 
 
 def continuous_checker(
-    sentences: list[str], objective_func=punctuation.find_too_less_punctuation
+    sentences: list[str], objective_func=length_checker.find_too_less_punctuation
 ):
     annotated_text_list = []
     text_position_list = []
     for sentence_num, one_sentence in enumerate(sentences):
         if len(objective_func(one_sentence)):
             parts = re.split(r"(?<=、)", one_sentence)
-            problematic_parts = punctuation.find_too_less_punctuation(one_sentence)
+            problematic_parts = length_checker.find_too_less_punctuation(one_sentence)
             for part in parts:
                 flag = False
                 for problematic_part in problematic_parts:
