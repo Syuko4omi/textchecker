@@ -16,16 +16,16 @@ def test_find_too_long_sentence(length_threshold=LENGTH_THRESHOLD):
 
 def test_find_too_much_punctuation(punctuation_num_threshold=PUNCTUATION_NUM_THRESHOLD):
     text_1 = "これは短い文です。"
-    text_2 = "あ、" * PUNCTUATION_NUM_THRESHOLD
+    text_2 = "あ、" * punctuation_num_threshold
     ret_1 = length_funcs.find_too_much_punctuation(text_1)
     ret_2 = length_funcs.find_too_much_punctuation(text_2)
     assert ret_1 is False
     assert ret_2 is True
 
 
-def test_find_too_less_punctuation():
+def test_find_too_less_punctuation(continuous_threshold=CONTINUOUS_THRESHOLD):
     text_1 = "これは短い文です。"
-    text_2 = "あ" * CONTINUOUS_THRESHOLD
+    text_2 = "あ" * continuous_threshold
     ret_1 = length_funcs.find_too_less_punctuation(text_1)
     ret_2 = length_funcs.find_too_less_punctuation(text_2)
     assert ret_1 == []
