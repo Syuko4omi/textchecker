@@ -44,32 +44,37 @@ if __name__ == "__main__":
     advices_list = []  # 指摘の具体的な内容
 
     my_args = get_args()
-    file_name = uploaded_file if uploaded_file is not None else my_args.file_name
+    file_name = my_args.file_name
     wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
 
     with text_area:
         st.header("本文")
-        with open(file_name, "r") as f:
-            text_lists = f.read().splitlines()
-            for row_num, text in enumerate(text_lists):  # 改行区切り
-                sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章
-                checker_function = element_to_func[show_element]
-                if show_element != "冗長な表現":
-                    (
-                        annotated_text_list,
-                        text_position_list,
-                        advice_list,
-                    ) = checker_function(sentences, row_num)
-                else:
-                    (
-                        annotated_text_list,
-                        text_position_list,
-                        advice_list,
-                    ) = checker_function(sentences, wordy_expression_dict, row_num)
-                annotated_texts += annotated_text_list
-                pos_list += text_position_list
-                advices_list += advice_list
-                annotated_texts.append("  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
+        f_r = open(file_name, "r")
+        text_lists = (
+            uploaded_file.read().decode("utf-8").splitlines()
+            if uploaded_file is not None
+            else f_r.read().splitlines()
+        )
+        f_r.close()
+        for row_num, text in enumerate(text_lists):  # 改行区切り
+            sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章
+            checker_function = element_to_func[show_element]
+            if show_element != "冗長な表現":
+                (
+                    annotated_text_list,
+                    text_position_list,
+                    advice_list,
+                ) = checker_function(sentences, row_num)
+            else:
+                (
+                    annotated_text_list,
+                    text_position_list,
+                    advice_list,
+                ) = checker_function(sentences, wordy_expression_dict, row_num)
+            annotated_texts += annotated_text_list
+            pos_list += text_position_list
+            advices_list += advice_list
+            annotated_texts.append("  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
         annotated_text(*annotated_texts)
 
     with advice_area:
