@@ -70,7 +70,7 @@ def punctuation_num_checker(
 
 def continuous_checker(
     sentences: list[str], row_num: int
-) -> tuple[list[Union[str, tuple[str]]], list[str]]:
+) -> tuple[list[Union[str, tuple[str]]], list[str], list[str]]:
     # 画面上で表示するための情報と、読点が適切に入っていない文章を検出した位置の入ったリストをそれぞれ返す
     annotated_text_list = []
     text_position_list = []

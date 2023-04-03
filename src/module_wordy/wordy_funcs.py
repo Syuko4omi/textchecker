@@ -1,3 +1,4 @@
+from typing import Union
 import json
 
 
@@ -59,7 +60,7 @@ def wrapper_find_wordy_expression(
 
 def wordy_expression_checker(
     sentences: list[str], wordy_expression_dict: dict[str, list[str]], row_num: int
-):
+) -> tuple[list[Union[str, tuple[str]]], list[str], list[str]]:
     annotated_text_list = []
     text_position_list = []
     advices_list = []
