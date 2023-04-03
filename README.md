@@ -2,7 +2,7 @@
 
 ## 動かし方
 ```
-poetry run streamlit run text_checker.py
+poetry run streamlit run src/text_checker.py
 ```
 
 ## 機能について

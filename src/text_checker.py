@@ -23,7 +23,7 @@ def create_layout():
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--file_name", default="hoge.txt", help="put your text file name"
+        "--file_name", default="src/hoge.txt", help="put your text file name"
     )
     args = parser.parse_args()
     return args
@@ -79,6 +79,5 @@ if __name__ == "__main__":
             for item in pos_list:
                 st.write(f"{item[0]}  \n{item[1]}")
         else:
-            print(advices_list)
             for item, advice in zip(pos_list, advices_list):
                 st.write(f"{item[0]}  \n冗長表現： {item[1]}  \n{advice}")

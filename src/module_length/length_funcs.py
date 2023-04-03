@@ -2,28 +2,28 @@ from typing import Union
 import re
 
 
-def find_too_long_sentence(one_sentence: str) -> bool:
-    # 一文が80文字以上の文章にはアラートを出す
-    if len(one_sentence) >= 80:
+def find_too_long_sentence(one_sentence: str, length_threshold=80) -> bool:
+    # (デフォルト)一文が80文字以上の文章にはアラートを出す
+    if len(one_sentence) >= length_threshold:
         return True
     else:
         return False
 
 
-def find_too_much_punctuation(one_sentence: str) -> bool:
-    # 文中に読点が4つ以上あったら、その文にアラートを出す
-    if one_sentence.count("、") >= 4:
+def find_too_much_punctuation(one_sentence: str, punctuation_num_threshold=4) -> bool:
+    # （デフォルト）文中に読点が4つ以上あったら、その文にアラートを出す
+    if one_sentence.count("、") >= punctuation_num_threshold:
         return True
     else:
         return False
 
 
-def find_too_less_punctuation(one_sentence: str) -> list[str]:
-    # 読点抜きで50文字以上連続する部分にはアラートを出す
+def find_too_less_punctuation(one_sentence: str, continuous_threshold=50) -> list[str]:
+    # （デフォルト）読点抜きで50文字以上連続する部分にはアラートを出す
     too_less_punctuation_parts = []
     parts = one_sentence.split("、")
     for part in parts:
-        if len(part) >= 50:
+        if len(part) >= continuous_threshold:
             too_less_punctuation_parts.append(part)
     return too_less_punctuation_parts
 
