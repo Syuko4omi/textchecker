@@ -1,12 +1,15 @@
 # textchecker
+文章校正ツールです。小説などの校正に利用可能です。
 
 ## 動かし方
+textcheckerディレクトリで以下のコマンドを入力してください。
 ```
 poetry run streamlit run src/text_checker.py
 ```
 
 ## 機能について
-以下の4つについてチェックします。
+最終的に以下の4つについてチェックできるようになることが目標です。  
+対応しやすいもの、個人的にチェックしてくれると嬉しいものから順に実装しています。
 
 - 長く読み辛い文章
     - 80文字以上の文章
@@ -28,5 +31,6 @@ poetry run streamlit run src/text_checker.py
     - 一文中に三回以上出てくる語（未）
         - 「〜の」みたいな助詞とか、代名詞で置き換えられる名詞とか
 
-### ライブラリ
-テキストのハイライトには[text-highlighter](https://github.com/kevin91nl/text-highlighter)を使用しています。
+## ライブラリ
+- [Streamlit](https://streamlit.io)を用いてアプリケーションを実装しています。
+- テキストのハイライトには[text-highlighter](https://github.com/kevin91nl/text-highlighter)を使用しています。
