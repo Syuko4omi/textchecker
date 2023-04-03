@@ -9,7 +9,7 @@ import argparse
 def create_layout():
     st.set_page_config(layout="wide")  # ページの横幅をフルに使う
     uploaded_file = st.sidebar.file_uploader(
-        "テキストファイルを選んでください（今は使えません）", accept_multiple_files=False
+        "テキストファイルを選んでください", accept_multiple_files=False
     )
     show_element = st.sidebar.radio(
         "表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文", "冗長な表現")
