@@ -15,8 +15,8 @@ def create_layout():
     uploaded_file = st.sidebar.file_uploader(
         "テキストファイルを選んでください", accept_multiple_files=False
     )
-    show_element = st.sidebar.radio(
-        "表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現")
+    show_element = st.sidebar.selectbox(
+        "表示する要素を選んでください", ["長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現"]
     )
     text_area, blank_area, advice_area = st.columns(
         (6, 0.25, 3.75)
@@ -101,6 +101,17 @@ if __name__ == "__main__":
         if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
             for item in pos_list:
                 st.write(f"{item[0]}  \n{item[1]}")
-        else:
+        elif show_element == "冗長な表現":
             for item, advice in zip(pos_list, advices_list):
                 st.write(f"{item[0]}  \n冗長表現： {item[1]}  \n{advice}")
+        else:
+            overused_expressions = list(set(advices_list))
+            overused_expressions_dict = {
+                overused_expression: advices_list.count(overused_expression)
+                for overused_expression in overused_expressions
+            }
+            overused_expressions = sorted(
+                overused_expressions_dict.items(), key=lambda x: x[1], reverse=True
+            )
+            for overused_expression in overused_expressions:
+                st.write(f"{overused_expression[0]}：{overused_expression[1]}回")

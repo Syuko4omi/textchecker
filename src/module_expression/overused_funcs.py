@@ -88,6 +88,9 @@ def overused_expression_checker(sentences, row_num, tokenizer, problematic_parts
                 problematic_level = problematic_level_dict[
                     (token.part_of_speech.split(",")[0], token.base_form)
                 ]
+                advice_list.append(
+                    (token.part_of_speech.split(",")[0], token.base_form)
+                )
                 annotated_text_list.append(
                     (
                         token.surface,
