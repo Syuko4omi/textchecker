@@ -1,13 +1,11 @@
 from module_length import length_funcs
 from module_wordy import wordy_funcs
-from module_expression import overused_funcs
-from module_expression import preparation
+from module_expression import overused_funcs, preparation
 
-# from module_expression import find_overused_word
 import re
+import argparse
 import streamlit as st
 from annotated_text import annotated_text
-import argparse
 
 
 def create_layout():
@@ -19,10 +17,16 @@ def create_layout():
         "表示する要素を選んでください", ["長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現"]
     )
     text_area, blank_area, advice_area = st.columns(
-        (6, 0.25, 3.75)
+        (6.5, 0.25, 3.25)
     )  # text_areaは本文でadvice_areaは指摘箇所を表示。blank_areaは余白
 
     return uploaded_file, show_element, text_area, blank_area, advice_area
+
+
+def prepare_tools_for_analysis():
+    wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
+    tokenizer = preparation.prepare_tokenizer()
+    return wordy_expression_dict, tokenizer
 
 
 def get_args():
@@ -34,7 +38,15 @@ def get_args():
     return args
 
 
-if __name__ == "__main__":
+def wrapper_function(
+    show_element,
+    sentences,
+    row_num,
+    wordy_expression_dict,
+    tokenizer,
+    overused_parts,
+    problematic_level_dict,
+):
     element_to_func = {
         "長すぎる文": length_funcs.lengthy_checker,
         "読点が多い文": length_funcs.punctuation_num_checker,
@@ -42,57 +54,72 @@ if __name__ == "__main__":
         "冗長な表現": wordy_funcs.wordy_expression_checker,
         "使われすぎな表現": overused_funcs.overused_expression_checker,
     }
+    if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
+        annotated_text_list, text_position_list, advice_list = element_to_func[
+            show_element
+        ](sentences, row_num)
+    elif show_element == "冗長な表現":
+        (
+            annotated_text_list,
+            text_position_list,
+            advice_list,
+        ) = element_to_func[
+            show_element
+        ](sentences, wordy_expression_dict, row_num)
+    else:
+        (
+            annotated_text_list,
+            text_position_list,
+            advice_list,
+        ) = element_to_func[
+            show_element
+        ](sentences, row_num, tokenizer, overused_parts, problematic_level_dict)
+    return annotated_text_list, text_position_list, advice_list
 
+
+if __name__ == "__main__":
+    my_args = get_args()
     uploaded_file, show_element, text_area, blank_area, advice_area = create_layout()
-
     annotated_texts = []  # 画面に表示するテキスト群
     pos_list = []  # 指摘した文章の場所
     advices_list = []  # 指摘の具体的な内容
-
-    my_args = get_args()
-    file_name = my_args.file_name
-    wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
-    tokenizer = preparation.prepare_tokenizer()
+    wordy_expression_dict, tokenizer = prepare_tools_for_analysis()
+    f_r = open(my_args.file_name, "r")
+    text_lists = (
+        uploaded_file.read().decode("utf-8").splitlines()
+        if uploaded_file is not None
+        else f_r.read().splitlines()
+    )
+    f_r.close()
+    overused_parts = overused_funcs.find_overused_part(  # 頻発する表現上位20件のリスト
+        text_lists, tokenizer, use_const=False
+    )
+    problematic_level_dict = {}  # overused_partsの各要素に対して頻度の高低を数字で与える
+    for i in range(len(overused_parts)):
+        if i < len(overused_parts) // 3:
+            problematic_level_dict[overused_parts[i]] = 0  # 高い
+        elif i < (len(overused_parts) // 3) * 2:
+            problematic_level_dict[overused_parts[i]] = 1  # 中くらい
+        else:
+            problematic_level_dict[overused_parts[i]] = 2  # 低い
+    for row_num, text in enumerate(text_lists):  # 改行ごとに文章を処理する
+        sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章がある場合は分ける
+        annotated_text_list, text_position_list, advice_list = wrapper_function(
+            show_element,
+            sentences,
+            row_num,
+            wordy_expression_dict,
+            tokenizer,
+            overused_parts,
+            problematic_level_dict,
+        )
+        annotated_texts += annotated_text_list
+        pos_list += text_position_list
+        advices_list += advice_list
+        annotated_texts.append("  \n  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
 
     with text_area:
         st.header("本文")
-        f_r = open(file_name, "r")
-        text_lists = (
-            uploaded_file.read().decode("utf-8").splitlines()
-            if uploaded_file is not None
-            else f_r.read().splitlines()
-        )
-        f_r.close()
-        problematic_parts = overused_funcs.find_problematic_part(
-            text_lists, tokenizer, use_const=False
-        )
-
-        for row_num, text in enumerate(text_lists):  # 改行区切り
-            sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章
-            checker_function = element_to_func[show_element]
-            if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
-                (
-                    annotated_text_list,
-                    text_position_list,
-                    advice_list,
-                ) = checker_function(sentences, row_num)
-            elif show_element == "冗長な表現":
-                (
-                    annotated_text_list,
-                    text_position_list,
-                    advice_list,
-                ) = checker_function(sentences, wordy_expression_dict, row_num)
-            else:
-                print(text)
-                (
-                    annotated_text_list,
-                    text_position_list,
-                    advice_list,
-                ) = checker_function(sentences, row_num, tokenizer, problematic_parts)
-            annotated_texts += annotated_text_list
-            pos_list += text_position_list
-            advices_list += advice_list
-            annotated_texts.append("  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
         annotated_text(*annotated_texts)
 
     with advice_area:
@@ -114,4 +141,5 @@ if __name__ == "__main__":
                 overused_expressions_dict.items(), key=lambda x: x[1], reverse=True
             )
             for overused_expression in overused_expressions:
+                # TODO: ここで類義語サジェスト機能が欲しい
                 st.write(f"{overused_expression[0]}：{overused_expression[1]}回")

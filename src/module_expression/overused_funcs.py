@@ -48,7 +48,7 @@ def sort_tf_idf_dict(
     return pos_word_score
 
 
-def find_problematic_part(text_list, tokenizer, pos_option=POS_LIST, use_const=True):
+def find_overused_part(text_list, tokenizer, pos_option=POS_LIST, use_const=True):
     word_to_frequency: dict[str, dict[str, int]] = {
         pos_name: {} for pos_name in POS_LIST
     }
@@ -60,31 +60,42 @@ def find_problematic_part(text_list, tokenizer, pos_option=POS_LIST, use_const=T
     with open("src/module_expression/livedoor_corpus_dict.json", "r") as f_r:
         idf_dict = json.load(f_r)
     word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency, use_const)
-    sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf)
+    sorted_tf_idf_list = sort_tf_idf_dict(word_to_tf_idf)
+    sorted_tf_idf_list = [(pos, word) for (pos, word, score) in sorted_tf_idf_list[:20]]
 
-    return sorted_tf_idf_dict[:20]
+    return sorted_tf_idf_list
 
 
-def overused_expression_checker(sentences, row_num, tokenizer, problematic_parts):
+def merge_parts(L):
+    # パーツが多くなるとannotated_textsが重くなるので、バラバラになったものを適度にまとめる（以下の例を参照）
+    # ["hoge", "fuga", ("hogehoge", 2), "pohe"] -> ['hogefuga', ('hogehoge', 2), 'pohe']
+    buf = ""
+    ret = []
+    for i in range(len(L)):
+        if str(L[i]) == L[i]:
+            buf += L[i]
+        else:
+            ret.append(buf)
+            ret.append(L[i])
+            buf = ""
+    if buf != "":
+        ret.append(buf)
+    return ret
+
+
+def overused_expression_checker(
+    sentences, row_num, tokenizer, overused_parts, problematic_level_dict
+):
     annotated_text_list = []
     text_position_list = []
     advice_list = []
-    problematic_parts = [problematic_part[:2] for problematic_part in problematic_parts]
-    problematic_level_dict = {}
-    for i in range(len(problematic_parts)):
-        if i < len(problematic_parts) // 3:
-            problematic_level_dict[problematic_parts[i]] = 0
-        elif i < (len(problematic_parts) // 3) * 2:
-            problematic_level_dict[problematic_parts[i]] = 1
-        else:
-            problematic_level_dict[problematic_parts[i]] = 2
     for sentence_num, one_sentence in enumerate(sentences):
         tokenized_sentence = tokenizer.tokenize(one_sentence)
         for token in tokenized_sentence:
             if (
                 token.part_of_speech.split(",")[0],
                 token.base_form,
-            ) in problematic_parts:
+            ) in overused_parts:
                 problematic_level = problematic_level_dict[
                     (token.part_of_speech.split(",")[0], token.base_form)
                 ]
@@ -103,6 +114,7 @@ def overused_expression_checker(sentences, row_num, tokenizer, problematic_parts
                 )
             else:
                 annotated_text_list.append(token.surface)
+    annotated_text_list = merge_parts(annotated_text_list)
     return annotated_text_list, text_position_list, advice_list
 
 

@@ -1,14 +1,16 @@
 # textchecker
 文章校正ツールです。小説などの校正に利用可能です。
 
+
 ## 動かし方
 textcheckerディレクトリで以下のコマンドを入力してください。
 ```
 poetry run streamlit run src/text_checker.py
 ```
 
+
 ## 機能について
-最終的に以下の4つについてチェックできるようになることが目標です。  
+現在以下の機能が実装済みです。 
 対応しやすいもの、個人的にチェックしてくれると嬉しいものから順に実装しています。
 
 - 長く読み辛い文章
@@ -18,6 +20,21 @@ poetry run streamlit run src/text_checker.py
 - 回りくどい文章
     - 冗長表現
         - 例：〜することができる、〜という
+- 表現に関わるもの
+    - 何度も使われる言葉
+        - 可能であれば、ここで類語の候補をサジェストしたい（未）
+
+
+## 外部ライブラリ
+- [Streamlit](https://streamlit.io)を用いてアプリケーションを実装しています。
+- テキストのハイライトには[text-highlighter](https://github.com/kevin91nl/text-highlighter)を使用しています。
+- 形態素解析には[Janome](https://mocobeta.github.io/janome/)を使用しています。
+
+
+## 実装を検討中のもの
+最終的に以下の4つについてチェックできるようになることが目標です。  
+
+- 回りくどい文章
     - 重言（未）
         - 例：違和感を感じる
 - 体裁に関わるもの
@@ -25,13 +42,7 @@ poetry run streamlit run src/text_checker.py
     - 半角カタカナ（未）
     - 常体・敬体の乱れ（未）
 - 表現に関わるもの
-    - 何度も使われる言葉（未）
-        - 可能であれば、ここで類語の候補をサジェストしたい
     - ワンパターンな文末の表現（未）
+        - 「〜した」「〜した」と連続するとか
     - 一文中に三回以上出てくる語（未）
         - 「〜の」みたいな助詞とか、代名詞で置き換えられる名詞とか
-
-## ライブラリ
-- [Streamlit](https://streamlit.io)を用いてアプリケーションを実装しています。
-- テキストのハイライトには[text-highlighter](https://github.com/kevin91nl/text-highlighter)を使用しています。
-- 形態素解析には[Janome](https://mocobeta.github.io/janome/)を使用しています。
