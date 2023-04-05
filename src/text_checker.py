@@ -2,7 +2,8 @@ from module_length import length_funcs
 from module_wordy import wordy_funcs
 from module_expression import overused_funcs
 from module_expression import preparation
-from module_expression import find_overused_word
+
+# from module_expression import find_overused_word
 import re
 import streamlit as st
 from annotated_text import annotated_text
@@ -20,6 +21,7 @@ def create_layout():
     text_area, blank_area, advice_area = st.columns(
         (6, 0.25, 3.75)
     )  # text_areaは本文でadvice_areaは指摘箇所を表示。blank_areaは余白
+
     return uploaded_file, show_element, text_area, blank_area, advice_area
 
 
@@ -61,8 +63,8 @@ if __name__ == "__main__":
             else f_r.read().splitlines()
         )
         f_r.close()
-        problematic_parts = find_overused_word.find_problematic_part(
-            text_lists, tokenizer
+        problematic_parts = overused_funcs.find_problematic_part(
+            text_lists, tokenizer, use_const=False
         )
 
         for row_num, text in enumerate(text_lists):  # 改行区切り
