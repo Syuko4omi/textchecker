@@ -34,3 +34,4 @@ poetry run streamlit run src/text_checker.py
 ## ライブラリ
 - [Streamlit](https://streamlit.io)を用いてアプリケーションを実装しています。
 - テキストのハイライトには[text-highlighter](https://github.com/kevin91nl/text-highlighter)を使用しています。
+- 形態素解析には[Janome](https://mocobeta.github.io/janome/)を使用しています。
