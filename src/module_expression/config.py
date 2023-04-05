@@ -1,0 +1,2 @@
+IGNORE_FILES = ["CHANGES.txt", "README.txt", "LICENCE.txt", ".DS_Store"]
+POS_LIST = ["名詞", "動詞", "形容詞", "形容動詞", "連体詞", "副詞"]
