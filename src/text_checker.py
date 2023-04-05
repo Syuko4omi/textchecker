@@ -1,5 +1,8 @@
 from module_length import length_funcs
 from module_wordy import wordy_funcs
+from module_expression import overused_funcs
+from module_expression import preparation
+from module_expression import find_overused_word
 import re
 import streamlit as st
 from annotated_text import annotated_text
@@ -12,7 +15,7 @@ def create_layout():
         "テキストファイルを選んでください", accept_multiple_files=False
     )
     show_element = st.sidebar.radio(
-        "表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文", "冗長な表現")
+        "表示する要素を選んでください", ("長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現")
     )
     text_area, blank_area, advice_area = st.columns(
         (6, 0.25, 3.75)
@@ -35,6 +38,7 @@ if __name__ == "__main__":
         "読点が多い文": length_funcs.punctuation_num_checker,
         "読点がない文": length_funcs.continuous_checker,
         "冗長な表現": wordy_funcs.wordy_expression_checker,
+        "使われすぎな表現": overused_funcs.overused_expression_checker,
     }
 
     uploaded_file, show_element, text_area, blank_area, advice_area = create_layout()
@@ -46,6 +50,7 @@ if __name__ == "__main__":
     my_args = get_args()
     file_name = my_args.file_name
     wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
+    tokenizer = preparation.prepare_tokenizer()
 
     with text_area:
         st.header("本文")
@@ -56,21 +61,32 @@ if __name__ == "__main__":
             else f_r.read().splitlines()
         )
         f_r.close()
+        problematic_parts = find_overused_word.find_problematic_part(
+            text_lists, tokenizer
+        )
+
         for row_num, text in enumerate(text_lists):  # 改行区切り
             sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章
             checker_function = element_to_func[show_element]
-            if show_element != "冗長な表現":
+            if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
                 (
                     annotated_text_list,
                     text_position_list,
                     advice_list,
                 ) = checker_function(sentences, row_num)
-            else:
+            elif show_element == "冗長な表現":
                 (
                     annotated_text_list,
                     text_position_list,
                     advice_list,
                 ) = checker_function(sentences, wordy_expression_dict, row_num)
+            else:
+                print(text)
+                (
+                    annotated_text_list,
+                    text_position_list,
+                    advice_list,
+                ) = checker_function(sentences, row_num, tokenizer, problematic_parts)
             annotated_texts += annotated_text_list
             pos_list += text_position_list
             advices_list += advice_list
@@ -80,7 +96,7 @@ if __name__ == "__main__":
     with advice_area:
         st.header("指摘箇所")
         st.write(f"{len(pos_list)}件見つかりました")
-        if show_element != "冗長な表現":
+        if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
             for item in pos_list:
                 st.write(f"{item[0]}  \n{item[1]}")
         else:

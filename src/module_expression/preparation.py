@@ -1,7 +1,9 @@
 import unicodedata
 import re
 from janome.tokenizer import Tokenizer
-from config import POS_LIST
+
+# from config import POS_LIST
+from module_expression.config import POS_LIST
 
 
 def text_preprocessor(text: str) -> str:

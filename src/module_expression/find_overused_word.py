@@ -1,7 +1,14 @@
 import json
 import numpy as np
-from utils import create_base_form_list, prepare_tokenizer, dict_add_append
-from config import POS_LIST
+
+from module_expression.preparation import (
+    create_base_form_list,
+    prepare_tokenizer,
+    dict_add_append,
+)
+
+# from config import POS_LIST
+from module_expression.config import POS_LIST
 
 
 def create_tf_idf_dict(
@@ -21,7 +28,8 @@ def create_tf_idf_dict(
                     np.log(freq + 1) * idf_dict[pos_name][word]
                 )
             else:
-                word_to_tf_idf[pos_name][word] = np.log(freq + 1) * const
+                # word_to_tf_idf[pos_name][word] = np.log(freq + 1) * const
+                word_to_tf_idf[pos_name][word] = 0
 
     return word_to_tf_idf
 
@@ -30,6 +38,7 @@ def sort_tf_idf_dict(
     word_to_tf_idf: dict[str, dict[str, float]], pos_list: list[str] = POS_LIST
 ) -> list[tuple[str, str, float]]:
     # tf-idfスコアの大きい順に並べる
+    # 引数のpos_listは、特定の品詞だけのリストを与えればそれに絞ってソートできる
     pos_word_score: list[tuple[str, str, float]] = []
     for pos in pos_list:
         word_score_dict = word_to_tf_idf[pos]
@@ -41,6 +50,24 @@ def sort_tf_idf_dict(
     return pos_word_score
 
 
+def find_problematic_part(text_list, tokenizer, pos_option=POS_LIST):
+    word_to_frequency: dict[str, dict[str, int]] = {
+        pos_name: {} for pos_name in POS_LIST
+    }
+    base_form_list = create_base_form_list(tokenizer, text_list, None)
+    for base_form in base_form_list:
+        word_to_frequency[base_form[0]] = dict_add_append(
+            word_to_frequency[base_form[0]], base_form[1]
+        )
+    with open("src/module_expression/livedoor_corpus_dict.json", "r") as f_r:
+        idf_dict = json.load(f_r)
+    word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency)
+    sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf)
+
+    return sorted_tf_idf_dict[:20]
+
+
+"""
 if __name__ == "__main__":
     word_to_frequency: dict[str, dict[str, int]] = {
         pos_name: {} for pos_name in POS_LIST
@@ -61,6 +88,8 @@ if __name__ == "__main__":
         )
 
     word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency)
-    sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf, ["名詞"])
+    sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf)
+    # sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf, ["名詞"])
 
     print(sorted_tf_idf_dict[:50])
+"""
