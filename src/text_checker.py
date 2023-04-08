@@ -92,16 +92,9 @@ if __name__ == "__main__":
     )
     f_r.close()
     overused_parts = overused_funcs.find_overused_part(  # 頻発する表現上位20件のリスト
-        text_lists, tokenizer, use_const=False
+        text_lists, tokenizer
     )
-    problematic_level_dict = {}  # overused_partsの各要素に対して頻度の高低を数字で与える
-    for i in range(len(overused_parts)):
-        if i < len(overused_parts) // 3:
-            problematic_level_dict[overused_parts[i]] = 0  # 高い
-        elif i < (len(overused_parts) // 3) * 2:
-            problematic_level_dict[overused_parts[i]] = 1  # 中くらい
-        else:
-            problematic_level_dict[overused_parts[i]] = 2  # 低い
+    problematic_level_dict = overused_funcs.overused_level_indicator(overused_parts)
     for row_num, text in enumerate(text_lists):  # 改行ごとに文章を処理する
         sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章がある場合は分ける
         annotated_text_list, text_position_list, advice_list = wrapper_function(
@@ -142,4 +135,6 @@ if __name__ == "__main__":
             )
             for overused_expression in overused_expressions:
                 # TODO: ここで類義語サジェスト機能が欲しい
-                st.write(f"{overused_expression[0]}：{overused_expression[1]}回")
+                st.write(
+                    f"（{overused_expression[0][0]}）{overused_expression[0][1]}：{overused_expression[1]}回"
+                )

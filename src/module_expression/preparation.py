@@ -5,8 +5,9 @@ from module_expression.config import POS_LIST
 
 
 def text_preprocessor(text: str) -> str:
+    # 全角・半角の表記を揃えたり、数字などがidfスコアの辞書で登録されるのを避けたりする
     text = unicodedata.normalize("NFKC", text)  # NFKC正規化
-    text = re.sub("\d+", "0", text)  # 数字を0に置換
+    text = re.sub(r"\d+", "0", text)  # 数字を0に置換
     return text
 
 
@@ -14,6 +15,7 @@ def create_base_form_list(
     tokenizer, texts: list[str], pos_option=None
 ) -> list[list[str]]:
     # 一つの文章の中から、pos_listにある品詞がついた語だけを取り出し、それを語幹として返す（重複あり）
+    # 語幹に対するidfスコアを計算するための前処理として行う
     # find_overused_word.pyでは、pos_optionで品詞のリストを指定すれば、それに絞って探すことができる
     base_form_list = []
     pos_list = POS_LIST if pos_option is None else pos_option
@@ -21,9 +23,8 @@ def create_base_form_list(
         text = text_preprocessor(text)
         for token in tokenizer.tokenize(text):
             if token.part_of_speech.split(",")[0] in pos_list:
-                # base_form_list.append(token.base_form)
                 base_form_list.append(
-                    [token.part_of_speech.split(",")[0], token.base_form]
+                    [token.part_of_speech.split(",")[0], token.base_form]  # 品詞と語幹
                 )
     return base_form_list
 
@@ -45,3 +46,20 @@ def dict_add_append(my_dict, key):
     else:
         my_dict[key] = 1
     return my_dict
+
+
+def merge_parts(L):
+    # パーツが多くなるとannotated_textsが重くなるので、バラバラになったものを適度にまとめる（以下の例を参照）
+    # ["hoge", "fuga", ("hogehoge", 2), "pohe"] -> ['hogefuga', ('hogehoge', 2), 'pohe']
+    buf = ""
+    ret = []
+    for i in range(len(L)):
+        if str(L[i]) == L[i]:
+            buf += L[i]
+        else:
+            ret.append(buf)
+            ret.append(L[i])
+            buf = ""
+    if buf != "":
+        ret.append(buf)
+    return ret

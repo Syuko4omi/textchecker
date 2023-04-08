@@ -1,20 +1,26 @@
 import json
 import numpy as np
 
-from module_expression.preparation import create_base_form_list, dict_add_append
+from module_expression.preparation import (
+    create_base_form_list,
+    dict_add_append,
+    merge_parts,
+)
 from module_expression.config import POS_LIST, COLOR_LIST, WARNING_LIST
 
 
 def create_tf_idf_dict(
     idf_dict: dict[str, dict[str, float]],
     word_to_frequency: dict[str, dict[str, int]],
-    use_const: bool,
+    use_hapax: bool,
+    doc_num: int,
 ) -> dict[str, dict[str, float]]:
     # idfスコアが入った辞書と、tfスコアの計算をするための単語ごとの頻度が入った辞書から、tf-idfスコアの計算をする
 
-    const = np.log(7376 / 2) + 1  # 7376個ファイルがある
+    # 文書中に出てこない単語のスコアを、文書中で1回出てきたものと同じとみなすかどうか
+    hapax_idf_score = np.log(doc_num / 2) + 1 if use_hapax is True else 0
     word_to_tf_idf: dict[str, dict[str, float]] = {
-        pos_name: {} for pos_name in POS_LIST
+        pos_name: {} for pos_name in POS_LIST  # 品詞名: {単語: スコア, ...}
     }
 
     for pos_name in POS_LIST:
@@ -24,31 +30,39 @@ def create_tf_idf_dict(
                     np.log(freq + 1) * idf_dict[pos_name][word]
                 )
             else:
-                if use_const:
-                    word_to_tf_idf[pos_name][word] = np.log(freq + 1) * const
-                else:
-                    word_to_tf_idf[pos_name][word] = 0
+                word_to_tf_idf[pos_name][word] = np.log(freq + 1) * hapax_idf_score
 
     return word_to_tf_idf
 
 
 def sort_tf_idf_dict(
-    word_to_tf_idf: dict[str, dict[str, float]], pos_list: list[str] = POS_LIST
-) -> list[tuple[str, str, float]]:
+    word_to_tf_idf: dict[str, dict[str, float]],
+    pos_list: list[str] = POS_LIST,
+    top_k: int = -1,
+) -> list[tuple[str, str]]:
     # tf-idfスコアの大きい順に並べる
     # 引数のpos_listは、特定の品詞だけのリストを与えればそれに絞ってソートできる
     pos_word_score: list[tuple[str, str, float]] = []
     for pos in pos_list:
-        word_score_dict = word_to_tf_idf[pos]
-        for word, score in word_score_dict.items():
+        word_to_score_dict = word_to_tf_idf[pos]
+        for word, score in word_to_score_dict.items():
             pos_word_score.append((pos, word, score))
 
     pos_word_score.sort(key=lambda x: x[2], reverse=True)
+    if top_k < 0:
+        return [(pos, word) for (pos, word, score) in pos_word_score]
+    else:
+        return [(pos, word) for (pos, word, score) in pos_word_score[:20]]
 
-    return pos_word_score
 
-
-def find_overused_part(text_list, tokenizer, pos_option=POS_LIST, use_const=True):
+def find_overused_part(
+    text_list: list[str],
+    tokenizer,
+    pos_option: list[str] = POS_LIST,
+    use_hapax: bool = False,
+    doc_num: int = 7376,
+    top_k: int = 20,
+) -> list[tuple[str, str]]:
     word_to_frequency: dict[str, dict[str, int]] = {
         pos_name: {} for pos_name in POS_LIST
     }
@@ -59,28 +73,26 @@ def find_overused_part(text_list, tokenizer, pos_option=POS_LIST, use_const=True
         )
     with open("src/module_expression/livedoor_corpus_dict.json", "r") as f_r:
         idf_dict = json.load(f_r)
-    word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency, use_const)
-    sorted_tf_idf_list = sort_tf_idf_dict(word_to_tf_idf)
-    sorted_tf_idf_list = [(pos, word) for (pos, word, score) in sorted_tf_idf_list[:20]]
+    word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency, use_hapax, doc_num)
+    sorted_tf_idf_list = sort_tf_idf_dict(
+        word_to_tf_idf, pos_list=pos_option, top_k=top_k
+    )
 
     return sorted_tf_idf_list
 
 
-def merge_parts(L):
-    # パーツが多くなるとannotated_textsが重くなるので、バラバラになったものを適度にまとめる（以下の例を参照）
-    # ["hoge", "fuga", ("hogehoge", 2), "pohe"] -> ['hogefuga', ('hogehoge', 2), 'pohe']
-    buf = ""
-    ret = []
-    for i in range(len(L)):
-        if str(L[i]) == L[i]:
-            buf += L[i]
+def overused_level_indicator(
+    overused_parts: list[tuple[str, str]]
+) -> dict[tuple[str, str], int]:
+    problematic_level_dict = {}  # overused_partsの各要素に対して頻度の高低を数字で与える
+    for i in range(len(overused_parts)):
+        if i < len(overused_parts) // 3:
+            problematic_level_dict[overused_parts[i]] = 0  # 高い
+        elif i < (len(overused_parts) // 3) * 2:
+            problematic_level_dict[overused_parts[i]] = 1  # 中くらい
         else:
-            ret.append(buf)
-            ret.append(L[i])
-            buf = ""
-    if buf != "":
-        ret.append(buf)
-    return ret
+            problematic_level_dict[overused_parts[i]] = 2  # 低い
+    return problematic_level_dict
 
 
 def overused_expression_checker(
@@ -92,55 +104,21 @@ def overused_expression_checker(
     for sentence_num, one_sentence in enumerate(sentences):
         tokenized_sentence = tokenizer.tokenize(one_sentence)
         for token in tokenized_sentence:
-            if (
-                token.part_of_speech.split(",")[0],
-                token.base_form,
-            ) in overused_parts:
-                problematic_level = problematic_level_dict[
-                    (token.part_of_speech.split(",")[0], token.base_form)
-                ]
-                advice_list.append(
-                    (token.part_of_speech.split(",")[0], token.base_form)
-                )
+            pos = token.part_of_speech.split(",")[0]
+            base_form = token.base_form
+            surface = token.surface
+            if (pos, base_form) in overused_parts:
+                problematic_level = problematic_level_dict[(pos, base_form)]
+                advice_list.append((pos, base_form))
                 annotated_text_list.append(
                     (
-                        token.surface,
+                        surface,
                         f"頻度：{WARNING_LIST[problematic_level]}",
                         COLOR_LIST[problematic_level],
                     )
                 )
-                text_position_list.append(
-                    (f"{row_num+1}行目第{sentence_num+1}文", token.surface)
-                )
+                text_position_list.append((f"{row_num+1}行目第{sentence_num+1}文", surface))
             else:
-                annotated_text_list.append(token.surface)
+                annotated_text_list.append(surface)
     annotated_text_list = merge_parts(annotated_text_list)
     return annotated_text_list, text_position_list, advice_list
-
-
-"""
-if __name__ == "__main__":
-    word_to_frequency: dict[str, dict[str, int]] = {
-        pos_name: {} for pos_name in POS_LIST
-    }
-    tokenizer = prepare_tokenizer()
-    file_name = "../hoge.txt"
-
-    with open("livedoor_corpus_dict.json", "r") as f_r:
-        idf_dict = json.load(f_r)
-
-    with open(file_name, "r") as f_r:
-        texts = f_r.read().splitlines()
-
-    base_form_list = create_base_form_list(tokenizer, texts, pos_option=None)
-    for base_form in base_form_list:
-        word_to_frequency[base_form[0]] = dict_add_append(
-            word_to_frequency[base_form[0]], base_form[1]
-        )
-
-    word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency)
-    sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf)
-    # sorted_tf_idf_dict = sort_tf_idf_dict(word_to_tf_idf, ["名詞"])
-
-    print(sorted_tf_idf_dict[:50])
-"""
