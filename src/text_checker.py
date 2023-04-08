@@ -1,11 +1,13 @@
-from module_length import length_funcs
-from module_wordy import wordy_funcs
-from module_expression import overused_funcs, preparation
-
 import re
 import argparse
 import streamlit as st
 from annotated_text import annotated_text
+import sqlite3
+import gensim
+
+from module_length import length_funcs
+from module_wordy import wordy_funcs
+from module_expression import overused_funcs, preparation, get_synonym
 
 
 def create_layout():
@@ -109,6 +111,11 @@ if __name__ == "__main__":
         advices_list += advice_list
         annotated_texts.append("  \n  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
 
+    conn = sqlite3.connect("src/module_expression/wnjpn.db")
+    model = gensim.models.Word2Vec.load(
+        "src/module_expression/latest-ja-word2vec-gensim-model/word2vec.gensim.model"
+    )
+
     st.header("本文")
     annotated_text(*annotated_texts)
 
@@ -127,5 +134,8 @@ if __name__ == "__main__":
                 for overused_expression in overused_parts
             }
             for (pos, expression), freq in overused_expressions_dict.items():
-                # TODO: ここで類義語サジェスト機能が欲しい
-                st.write(f"（{pos}）{expression}：{freq}回")
+                ret_l = get_synonym.sort_word(model, conn, expression)
+                cand = "・".join(ret_l)
+                if len(cand) == 0:
+                    cand = "-"
+                st.write(f"（{pos}）{expression}：{freq}回  \n  \n類義語：{cand}")
