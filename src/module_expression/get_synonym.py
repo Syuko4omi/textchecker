@@ -74,9 +74,13 @@ def sort_word(gensim_model, connect, word):
                 similarity = gensim_model.wv.similarity(word, cand)
                 L.append((cand, similarity)) if cand != word else None
             except Exception:
-                None
+                pass
+    try:
+        similar_words_in_word2vec = gensim_model.wv.most_similar(word)
+        L += similar_words_in_word2vec
+    except KeyError:
+        pass
     L = list(set(L))
     L.sort(key=lambda x: x[1], reverse=True)
-    print(L)
     L = [item[0] for item in L if item[1] > 0.1]
     return L
