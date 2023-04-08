@@ -16,11 +16,8 @@ def create_layout():
     show_element = st.sidebar.selectbox(
         "表示する要素を選んでください", ["長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現"]
     )
-    text_area, blank_area, advice_area = st.columns(
-        (6.5, 0.25, 3.25)
-    )  # text_areaは本文でadvice_areaは指摘箇所を表示。blank_areaは余白
 
-    return uploaded_file, show_element, text_area, blank_area, advice_area
+    return uploaded_file, show_element
 
 
 def prepare_tools_for_analysis():
@@ -79,7 +76,8 @@ def wrapper_function(
 
 if __name__ == "__main__":
     my_args = get_args()
-    uploaded_file, show_element, text_area, blank_area, advice_area = create_layout()
+    uploaded_file, show_element = create_layout()
+
     annotated_texts = []  # 画面に表示するテキスト群
     pos_list = []  # 指摘した文章の場所
     advices_list = []  # 指摘の具体的な内容
@@ -111,13 +109,12 @@ if __name__ == "__main__":
         advices_list += advice_list
         annotated_texts.append("  \n  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
 
-    with text_area:
-        st.header("本文")
-        annotated_text(*annotated_texts)
+    st.header("本文")
+    annotated_text(*annotated_texts)
 
-    with advice_area:
-        st.header("指摘箇所")
-        st.write(f"{len(pos_list)}件見つかりました")
+    with st.sidebar.expander(f"指摘箇所（{len(pos_list)}件）", expanded=True):
+        if len(pos_list) == 0:
+            st.write("指摘箇所はありません")
         if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
             for item in pos_list:
                 st.write(f"{item[0]}  \n{item[1]}")
@@ -125,16 +122,10 @@ if __name__ == "__main__":
             for item, advice in zip(pos_list, advices_list):
                 st.write(f"{item[0]}  \n冗長表現： {item[1]}  \n{advice}")
         else:
-            overused_expressions = list(set(advices_list))
             overused_expressions_dict = {
                 overused_expression: advices_list.count(overused_expression)
-                for overused_expression in overused_expressions
+                for overused_expression in overused_parts
             }
-            overused_expressions = sorted(
-                overused_expressions_dict.items(), key=lambda x: x[1], reverse=True
-            )
-            for overused_expression in overused_expressions:
+            for (pos, expression), freq in overused_expressions_dict.items():
                 # TODO: ここで類義語サジェスト機能が欲しい
-                st.write(
-                    f"（{overused_expression[0][0]}）{overused_expression[0][1]}：{overused_expression[1]}回"
-                )
+                st.write(f"（{pos}）{expression}：{freq}回")
