@@ -22,11 +22,16 @@ poetry run python3 src/calculate_idf_score.py
 
 ### 3. 文章校正の実行
 以下のコマンドを実行すると、Streamlitの画面が立ち上がります。  
-校正したいテキストファイルを用意し、画面上の所定の場所にドラッグ&ドロップしてください。  
-終了したい場合は、コマンドラインからCtrl+Cでアプリケーションを終了させてください。
 ```
 poetry run streamlit run src/text_checker.py
 ```
+ブラウザに以下のような画面が表示されます。
+
+![image](https://user-images.githubusercontent.com/50670279/230769301-caba5e1c-04b4-4530-a53e-14e2ff662968.png)  
+
+校正したいテキストファイルを用意し、画面左上の所定の場所にドラッグ&ドロップするか、Browse filesから好きなファイルを選ぶと、画面上にチェック済みの文章が表示されます。  
+
+終了したい場合は、コマンドラインからCtrl+Cでアプリケーションを終了させ、ブラウザを閉じてください。
 
 
 ## 機能について
