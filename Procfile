@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run src/text_checker.py
+web: sh setup.sh && sh get_resources.sh && streamlit run src/text_checker.py
