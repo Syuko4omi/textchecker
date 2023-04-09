@@ -12,12 +12,11 @@ from module_expression.config import POS_LIST, COLOR_LIST, WARNING_LIST
 def create_tf_idf_dict(
     idf_dict: dict[str, dict[str, float]],
     word_to_frequency: dict[str, dict[str, int]],
-    use_hapax: bool,
+    use_hapax: bool,  # 文書中に出てこない単語のスコアを、文書中で1回出てきたものと同じとみなすかどうか
     doc_num: int,
 ) -> dict[str, dict[str, float]]:
-    # idfスコアが入った辞書と、tfスコアの計算をするための単語ごとの頻度が入った辞書から、tf-idfスコアの計算をする
-
-    # 文書中に出てこない単語のスコアを、文書中で1回出てきたものと同じとみなすかどうか
+    # 分析対象のテキストから、tf-idfスコアの計算をする
+    # idfスコアが入った辞書と、tfスコアの計算をするための単語ごとの頻度が入った辞書を使う
     hapax_idf_score = np.log(doc_num / 2) + 1 if use_hapax is True else 0
     word_to_tf_idf: dict[str, dict[str, float]] = {
         pos_name: {} for pos_name in POS_LIST  # 品詞名: {単語: スコア, ...}
@@ -38,7 +37,7 @@ def create_tf_idf_dict(
 def sort_tf_idf_dict(
     word_to_tf_idf: dict[str, dict[str, float]],
     pos_list: list[str] = POS_LIST,
-    top_k: int = -1,
+    top_k: int = -1,  # 上位何件まで表示するか
 ) -> list[tuple[str, str]]:
     # tf-idfスコアの大きい順に並べる
     # 引数のpos_listは、特定の品詞だけのリストを与えればそれに絞ってソートできる
@@ -52,7 +51,7 @@ def sort_tf_idf_dict(
     if top_k < 0:
         return [(pos, word) for (pos, word, score) in pos_word_score]
     else:
-        return [(pos, word) for (pos, word, score) in pos_word_score[:20]]
+        return [(pos, word) for (pos, word, score) in pos_word_score[:top_k]]
 
 
 def find_overused_part(
@@ -63,6 +62,7 @@ def find_overused_part(
     doc_num: int = 7376,
     top_k: int = 20,
 ) -> list[tuple[str, str]]:
+    # テキストの中でよく使われる語彙を見つけてくる
     word_to_frequency: dict[str, dict[str, int]] = {
         pos_name: {} for pos_name in POS_LIST
     }
@@ -71,7 +71,7 @@ def find_overused_part(
         word_to_frequency[base_form[0]] = dict_add_append(
             word_to_frequency[base_form[0]], base_form[1]
         )
-    with open("src/module_expression/livedoor_corpus_dict.json", "r") as f_r:
+    with open("./data/livedoor_corpus_dict.json", "r") as f_r:
         idf_dict = json.load(f_r)
     word_to_tf_idf = create_tf_idf_dict(idf_dict, word_to_frequency, use_hapax, doc_num)
     sorted_tf_idf_list = sort_tf_idf_dict(
@@ -86,7 +86,7 @@ def overused_level_indicator(
 ) -> dict[tuple[str, str], int]:
     problematic_level_dict = {}  # overused_partsの各要素に対して頻度の高低を数字で与える
     for i in range(len(overused_parts)):
-        if i < len(overused_parts) // 3:
+        if i < len(overused_parts) // 3:  # 上位1/3に入っていたら高い
             problematic_level_dict[overused_parts[i]] = 0  # 高い
         elif i < (len(overused_parts) // 3) * 2:
             problematic_level_dict[overused_parts[i]] = 1  # 中くらい
@@ -104,9 +104,9 @@ def overused_expression_checker(
     for sentence_num, one_sentence in enumerate(sentences):
         tokenized_sentence = tokenizer.tokenize(one_sentence)
         for token in tokenized_sentence:
-            pos = token.part_of_speech.split(",")[0]
-            base_form = token.base_form
-            surface = token.surface
+            pos = token.part_of_speech.split(",")[0]  # 品詞
+            base_form = token.base_form  # 見出し語（走る）
+            surface = token.surface  # 表層形（走る・走れ・...）
             if (pos, base_form) in overused_parts:
                 problematic_level = problematic_level_dict[(pos, base_form)]
                 advice_list.append((pos, base_form))

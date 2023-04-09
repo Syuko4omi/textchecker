@@ -35,7 +35,7 @@ def prepare_tools_for_analysis():
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--file_name", default="src/hoge.txt", help="put your text file name"
+        "--file_name", default="./data/demo.txt", help="put your text file name"
     )
     args = parser.parse_args()
     return args
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             for item, advice in zip(pos_list, advices_list):
                 st.write(f"### {item[0]}  \n冗長表現： {item[1]}  \n{advice}")
         else:
-            conn = sqlite3.connect("src/module_expression/wnjpn.db")
+            conn = sqlite3.connect("./data/wnjpn.db")
             model = gensim.models.Word2Vec.load(
                 "src/module_expression/latest-ja-word2vec-gensim-model/word2vec.gensim.model"
             )

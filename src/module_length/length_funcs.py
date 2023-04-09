@@ -30,9 +30,9 @@ def find_too_less_punctuation(one_sentence: str, continuous_threshold=50) -> lis
 
 def lengthy_checker(
     sentences: list[str], row_num: int
-) -> tuple[list[Union[str, tuple[str]]], list[str]]:
+) -> tuple[list[Union[str, tuple[str, str, str]]], list[tuple[str, str]], list[str]]:
     # 画面上で表示するための情報と、長すぎる文章を検出した位置の入ったリストをそれぞれ返す
-    annotated_text_list = []
+    annotated_text_list: list[Union[str, tuple[str, str, str]]] = []
     text_position_list = []
     advice_list: list[str] = []
     for sentence_num, one_sentence in enumerate(sentences):
@@ -50,11 +50,11 @@ def lengthy_checker(
 
 def punctuation_num_checker(
     sentences: list[str], row_num: int
-) -> tuple[list[Union[str, tuple[str]]], list[str]]:
+) -> tuple[list[Union[str, tuple[str, str, str]]], list[tuple[str, str]], list[str]]:
     # 画面上で表示するための情報と、読点が多い文章を検出した位置の入ったリストをそれぞれ返す
-    annotated_text_list = []
+    annotated_text_list: list[Union[str, tuple[str, str, str]]] = []
     text_position_list = []
-    advice_list = []
+    advice_list: list[str] = []
     for sentence_num, one_sentence in enumerate(sentences):
         if find_too_much_punctuation(one_sentence):
             annotated_text_list.append(
@@ -70,11 +70,11 @@ def punctuation_num_checker(
 
 def continuous_checker(
     sentences: list[str], row_num: int
-) -> tuple[list[Union[str, tuple[str]]], list[str], list[str]]:
+) -> tuple[list[Union[str, tuple[str, str, str]]], list[tuple[str, str]], list[str]]:
     # 画面上で表示するための情報と、読点が適切に入っていない文章を検出した位置の入ったリストをそれぞれ返す
-    annotated_text_list = []
+    annotated_text_list: list[Union[str, tuple[str, str, str]]] = []
     text_position_list = []
-    advice_list = []
+    advice_list: list[str] = []
     for sentence_num, one_sentence in enumerate(sentences):
         problematic_parts = find_too_less_punctuation(one_sentence)  # 読点が適切に入っていない部分文字列
         if len(problematic_parts) == 0:  # 一文中に読点がちゃんと入っている場合はそのまま

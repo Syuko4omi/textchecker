@@ -65,7 +65,7 @@ def getSynonym(conn, word):
     return synonym
 
 
-def sort_word(gensim_model, connect, word):
+def sort_word(gensim_model, connect, word) -> list[str]:
     word_dict = getSynonym(connect, word)
     L = []
     for key, word_list in word_dict.items():
@@ -82,5 +82,5 @@ def sort_word(gensim_model, connect, word):
         pass
     L = list(set(L))
     L.sort(key=lambda x: x[1], reverse=True)
-    L = [item[0] for item in L if item[1] > 0.1]
-    return L
+    ret = [item[0] for item in L if item[1] > 0.1]
+    return ret

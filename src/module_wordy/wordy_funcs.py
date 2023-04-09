@@ -7,8 +7,8 @@ def create_wordy_expression_dict(
 ) -> dict[str, list[str]]:
     # keyが冗長な表現、valueが置き換えるべき先の表現のリストであるような辞書を作る
     wordy_expressions = {}
-    with open(wordy_expressions_file_path, "r") as f:
-        for line in f:
+    with open(wordy_expressions_file_path, "r") as f_r:
+        for line in f_r:
             instance: dict = json.loads(line)
             wordy_expressions[instance["original_wordy_form"]] = instance[
                 "simpler_form"
@@ -60,8 +60,8 @@ def wrapper_find_wordy_expression(
 
 def wordy_expression_checker(
     sentences: list[str], wordy_expression_dict: dict[str, list[str]], row_num: int
-) -> tuple[list[Union[str, tuple[str]]], list[str], list[str]]:
-    annotated_text_list = []
+) -> tuple[list[Union[str, tuple[str, str, str]]], list[tuple[str, str]], list[str]]:
+    annotated_text_list: list[Union[str, tuple[str, str, str]]] = []
     text_position_list = []
     advices_list = []
     for sentence_num, one_sentence in enumerate(sentences):
@@ -70,13 +70,12 @@ def wordy_expression_checker(
             one_sentence, wordy_expression_dict
         )
         if len(problematic_parts) > 0:
-            # for problematic_part in problematic_parts:
             for problematic_part, advice in zip(problematic_parts, advice_list):
                 # 冗長な表現を文章の前の方から見つけていく
                 problematic_part_start_idx = one_sentence.find(
                     problematic_part, start_idx
                 )
-                annotated_text_list.append(
+                annotated_text_list.append(  # 問題の箇所の直前までを格納
                     one_sentence[start_idx:problematic_part_start_idx]
                 )
                 annotated_text_list.append((problematic_part, advice, "#009900"))
