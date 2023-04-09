@@ -8,11 +8,15 @@ authors = ["Syuko4omi <riorioblackcat@yahoo.co.jp>"]
 python = "^3.9.13"
 streamlit = "^1.20.0"
 st-annotated-text = "^3.0.0"
+Janome = "^0.4.2"
+tqdm = "^4.65.0"
+gensim = "^4.3.1"
 
 [tool.poetry.dev-dependencies]
 black = "^23.1.0"
 flake8 = "^6.0.0"
 pytest = "^7.2.2"
+mypy = "^1.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
