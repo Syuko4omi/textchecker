@@ -3,7 +3,26 @@
 
 
 ## 動かし方
-textcheckerディレクトリで以下のコマンドを入力してください。
+全てtextcheckerディレクトリで行います。  
+最初は以下の1〜3の順に行いますが、二回目以降は「文章校正の実行」のコマンドのみ実行すれば大丈夫です。
+
+### 1. 日本語WordNet等のダウンロード
+一度行えば十分です。1分程度かかります。
+```
+sh get_resources.sh
+```
+
+### 2. コーパスから語彙のidfスコアを計算（スキップ可）
+GitHubからクローンしてきた場合、dataディレクトリにlivedoor_corpus_dict.jsonが存在しているはずです。  
+その場合、この部分は行わなくても問題ないです。  
+8〜10分程度かかります。
+```
+poetry run python3 src/calculate_idf_score.py
+```
+
+### 3. 文章校正の実行
+以下のコマンドを実行すると、Streamlitの画面が立ち上がります。  
+校正したいテキストファイルを用意し、画面上の所定の場所にドラッグ&ドロップしてください。
 ```
 poetry run streamlit run src/text_checker.py
 ```
@@ -30,7 +49,7 @@ poetry run streamlit run src/text_checker.py
 
 - 長く読み辛い文章
     - 要約する（未）
-        - GPT等生成モデルが利用可能
+        - GPT等生成モデルが利用可能（？）
 - 回りくどい文章
     - 重言（未）
         - 例：違和感を感じる

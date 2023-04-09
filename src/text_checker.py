@@ -131,9 +131,7 @@ if __name__ == "__main__":
                 st.write(f"### {item[0]}  \n冗長表現： {item[1]}  \n{advice}")
         else:
             conn = sqlite3.connect("./data/wnjpn.db")
-            model = gensim.models.Word2Vec.load(
-                "./data/latest-ja-word2vec-gensim-model/word2vec.gensim.model"
-            )
+            model = gensim.models.Word2Vec.load("./data/word2vec.gensim.model")
             overused_expressions_dict = {
                 overused_expression: advices_list.count(overused_expression)
                 for overused_expression in overused_parts
