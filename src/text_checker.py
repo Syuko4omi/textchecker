@@ -132,7 +132,7 @@ if __name__ == "__main__":
         else:
             conn = sqlite3.connect("./data/wnjpn.db")
             model = gensim.models.Word2Vec.load(
-                "src/module_expression/latest-ja-word2vec-gensim-model/word2vec.gensim.model"
+                "./data/latest-ja-word2vec-gensim-model/word2vec.gensim.model"
             )
             overused_expressions_dict = {
                 overused_expression: advices_list.count(overused_expression)
