@@ -5,7 +5,7 @@
 ## 動かし方
 [pyenv](https://github.com/pyenv/pyenv#set-up-your-shell-environment-for-pyenv)と[poetry](https://python-poetry.org/docs/)が導入されていることを前提とします。（Pythonは3.9.13を使用します）  
 以下のコマンドは全てtextcheckerディレクトリで行います。  
-最初は以下の1〜3の順に行いますが、二回目以降は「文章校正の実行」のコマンドのみ実行すれば大丈夫です。
+最初は以下の1〜4の順に行いますが、二回目以降は「文章校正の実行」のコマンドのみ実行すれば大丈夫です。
 
 ### 1. パッケージのインストール
 一度行えば十分です。
