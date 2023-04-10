@@ -3,16 +3,23 @@
 最大5万字（100KB）くらいまで扱うことができます。（これ以上長い文章も扱えなくはないですが、現実的な時間で校正することが難しいです）
 
 ## 動かし方
-全てtextcheckerディレクトリで行います。  
+[pyenv](https://github.com/pyenv/pyenv#set-up-your-shell-environment-for-pyenv)と[poetry](https://python-poetry.org/docs/)が導入されていることを前提とします。（Pythonは3.9.13を使用します）  
+以下のコマンドは全てtextcheckerディレクトリで行います。  
 最初は以下の1〜3の順に行いますが、二回目以降は「文章校正の実行」のコマンドのみ実行すれば大丈夫です。
 
-### 1. 日本語WordNet等のダウンロード
+### 1. パッケージのインストール
+一度行えば十分です。
+```
+poetry install --no-dev
+```
+
+### 2. 日本語WordNet等のダウンロード
 一度行えば十分です。1分程度かかります。
 ```
 sh get_resources.sh
 ```
 
-### 2. コーパスから語彙のidfスコアを計算（スキップ可）
+### 3. コーパスから語彙のidfスコアを計算（スキップ可）
 GitHubからクローンしてきた場合、dataディレクトリにlivedoor_corpus_dict.jsonが存在しているはずです。  
 その場合、この部分は行わなくても問題ないです。  
 8〜10分程度かかります。
@@ -20,7 +27,7 @@ GitHubからクローンしてきた場合、dataディレクトリにlivedoor_c
 poetry run python3 src/calculate_idf_score.py
 ```
 
-### 3. 文章校正の実行
+### 4. 文章校正の実行
 以下のコマンドを実行すると、Streamlitの画面が立ち上がります。  
 ```
 poetry run streamlit run src/text_checker.py
