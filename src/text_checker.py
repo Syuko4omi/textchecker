@@ -5,7 +5,7 @@ from annotated_text import annotated_text
 import sqlite3
 import gensim
 
-from module_length import length_funcs
+from module_length import length_funcs, proofread_with_chatgpt
 from module_wordy import wordy_funcs
 from module_expression import overused_funcs, preparation, get_synonym
 from module_expression.config import POS_LIST
@@ -14,6 +14,7 @@ from module_expression.config import POS_LIST
 def create_layout():
     st.set_page_config(layout="wide")  # ページの横幅をフルに使う
     uploaded_file = st.sidebar.file_uploader("📝テキストファイル", accept_multiple_files=False)
+
     show_element = st.sidebar.selectbox(
         "⚙️表示する要素", ["長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現"]
     )
@@ -83,6 +84,7 @@ def wrapper_function(
 if __name__ == "__main__":
     my_args = get_args()
     uploaded_file, show_element, selected_items = create_layout()
+
     if selected_items == []:
         selected_items = POS_LIST
 
@@ -142,3 +144,25 @@ if __name__ == "__main__":
                 if len(cand) == 0:
                     cand = "-"
                 st.write(f"### （{pos}）{expression}：{freq}回  \n  \n関連語：{cand}")
+
+    with st.form(key="my_form", clear_on_submit=True):
+        with st.sidebar:
+            INPUT_LIMIT_LENGTH = 300
+            long_sentence = st.text_input(
+                label=f"🤖ChatGPTが長い文を短くします。以下に{INPUT_LIMIT_LENGTH}字未満の文を入力してください。送信する度に結果が変わる可能性があります。"
+            )
+            style = st.radio(
+                "⚠️送信前に元の文体を選んでください。", ("常体（だ・である調）", "敬体（です・ます調）"), horizontal=True
+            )
+            submit_button = st.form_submit_button(label="ChatGPTに送信")
+            if submit_button:
+                if len(long_sentence) >= INPUT_LIMIT_LENGTH:
+                    st.write(
+                        f"入力する文章は{INPUT_LIMIT_LENGTH}字未満にしてください。（現在の文字数：{len(long_sentence)}字）"
+                    )
+                else:
+                    well_written_text = proofread_with_chatgpt.proofreader(
+                        long_sentence, style
+                    )
+                    st.write(f"校正前：{long_sentence}")
+                    st.write(f"校正後：{well_written_text}")
