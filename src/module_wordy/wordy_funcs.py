@@ -1,5 +1,6 @@
 from typing import Union
 import json
+import annotation_color_config
 
 
 def create_wordy_expression_dict(
@@ -78,7 +79,9 @@ def wordy_expression_checker(
                 annotated_text_list.append(  # 問題の箇所の直前までを格納
                     one_sentence[start_idx:problematic_part_start_idx]
                 )
-                annotated_text_list.append((problematic_part, advice, "#009900"))
+                annotated_text_list.append(
+                    (problematic_part, advice, annotation_color_config.WORDY)
+                )
                 start_idx = problematic_part_start_idx + len(problematic_part)
                 text_position_list.append(
                     (f"{row_num+1}行目第{sentence_num+1}文", problematic_part)

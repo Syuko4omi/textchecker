@@ -1,5 +1,6 @@
 from typing import Union
 import re
+import annotation_color_config
 
 
 def find_too_long_sentence(one_sentence: str, length_threshold=80) -> bool:
@@ -38,7 +39,11 @@ def lengthy_checker(
     for sentence_num, one_sentence in enumerate(sentences):
         if find_too_long_sentence(one_sentence):
             annotated_text_list.append(
-                (one_sentence, f"長い（{len(one_sentence)}文字）", "#e5004f")
+                (
+                    one_sentence,
+                    f"長い（{len(one_sentence)}文字）",
+                    annotation_color_config.LENGTH,
+                )
             )
             text_position_list.append(
                 (f"{row_num+1}行目第{sentence_num+1}文", one_sentence)
@@ -58,7 +63,11 @@ def punctuation_num_checker(
     for sentence_num, one_sentence in enumerate(sentences):
         if find_too_much_punctuation(one_sentence):
             annotated_text_list.append(
-                (one_sentence, f"読点が多い（{one_sentence.count('、')}個）", "#e5004f")
+                (
+                    one_sentence,
+                    f"読点が多い（{one_sentence.count('、')}個）",
+                    annotation_color_config.LENGTH,
+                )
             )
             text_position_list.append(
                 (f"{row_num+1}行目第{sentence_num+1}文", one_sentence)
@@ -83,7 +92,9 @@ def continuous_checker(
         parts = re.split(r"(?<=、)", one_sentence)
         for part in parts:  # 読点で区切った文のそれぞれの部分について、読点が適切に入っていないかチェック
             if any(problematic_part in part for problematic_part in problematic_parts):
-                annotated_text_list.append((part, f"読点がない（{len(part)}文字）", "#e5004f"))
+                annotated_text_list.append(
+                    (part, f"読点がない（{len(part)}文字）", annotation_color_config.LENGTH)
+                )
                 text_position_list.append((f"{row_num+1}行目第{sentence_num+1}文", part))
             else:
                 annotated_text_list.append(part)
