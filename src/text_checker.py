@@ -121,6 +121,12 @@ def annotate_and_show_body_text(  # 文章を分析した結果を返し、色�
         else f_r.read().splitlines()
     )
     f_r.close()
+
+    char_num = sum([len(item) for item in text_lists])
+    if char_num > 70000:  # 長すぎる文章は、その時点で解析を中止する
+        st.write(f"入力する文章は最大でも50000字程度にしてください。（入力された文字数：{char_num}字）")
+        return pos_list, advices_list, []
+
     overused_parts = overused_funcs.find_overused_part(  # 頻発する表現上位20件のリスト
         text_lists, tokenizer, pos_option=selected_items
     )
