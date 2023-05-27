@@ -75,6 +75,8 @@ poetry run streamlit run src/text_checker.py
 2. 次に、元の文章の文体を選択します。常体の「だ・である調」なのか、それとも敬体の「です・ます調」であるのかを、ChatGPT側に教えるのが目的です。  
 3. 最後に、サイドバー最下部にある「ChatGPTに送信」ボタンを押し、送信します。通常10秒程度で校正が完了し、結果が表示されます。APIの利用制限上、リクエストを送るのは一分あたり三回程度が望ましいです。
 
+![image](https://github.com/Syuko4omi/textchecker/assets/50670279/d5b0c2b6-e74c-41a4-a76b-7d26b4bc131f)
+
 ### APIキーについて
 - この機能を利用するには、OpenAIのAPIキーが必要です。
 - OpenAIでアカウントを作成してAPIキーを取得したのち、環境変数としてOPENAI_API_KEYという名前で登録すると、この機能が使えるようになります。
