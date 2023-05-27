@@ -19,6 +19,7 @@
 {"original_tautological_form": "未だに未解決", "non_tautological_form": ["未解決"]}
 {"original_tautological_form": "いまだに未解決", "non_tautological_form": ["未解決"]}
 {"original_tautological_form": "従来から", "non_tautological_form": ["従来"]}
+{"original_tautological_form": "従来まで", "non_tautological_form": ["従来"]}
 {"original_tautological_form": "後で後悔", "non_tautological_form": ["後悔する", "後で悔やむ"]}
 {"original_tautological_form": "あとで後悔", "non_tautological_form": ["後悔する", "後で悔やむ"]}
 {"original_tautological_form": "射程距離", "non_tautological_form": ["射程"]}
@@ -67,6 +68,7 @@
 {"original_tautological_form": "クリスマスイブの夜", "non_tautological_form": ["クリスマスイブ"]}
 {"original_tautological_form": "クリスマス・イブの夜", "non_tautological_form": ["クリスマス・イブ"]}
 {"original_tautological_form": "炎天下の下", "non_tautological_form": ["炎天下"]}
+{"original_tautological_form": "炎天下の中", "non_tautological_form": ["炎天下"]}
 {"original_tautological_form": "事前予約", "non_tautological_form": ["予約"]}
 {"original_tautological_form": "店に来店", "non_tautological_form": ["来店"]}
 {"original_tautological_form": "明かりを点灯", "non_tautological_form": ["明かりを付ける"]}
@@ -80,3 +82,14 @@
 {"original_tautological_form": "はっきりと断言", "non_tautological_form": ["断言"]}
 {"original_tautological_form": "はっきり断言", "non_tautological_form": ["断言"]}
 {"original_tautological_form": "捺印を押", "non_tautological_form": ["捺印する"]}
+{"original_tautological_form": "沿岸沿い", "non_tautological_form": ["沿岸", "海岸沿い"]}
+{"original_tautological_form": "引き続き継続する", "non_tautological_form": ["継続する"]}
+{"original_tautological_form": "加工を加え", "non_tautological_form": ["加工する"]}
+{"original_tautological_form": "後ろから羽交い絞め", "non_tautological_form": ["羽交い絞め"]}
+{"original_tautological_form": "最後のラスト", "non_tautological_form": ["最後の"]}
+{"original_tautological_form": "思いがけないハプニング", "non_tautological_form": ["思いがけない出来事", "ハプニング"]}
+{"original_tautological_form": "車の車間距離", "non_tautological_form": ["車間距離"]}
+{"original_tautological_form": "壮観な眺め", "non_tautological_form": ["壮観"]}
+{"original_tautological_form": "内定が決ま", "non_tautological_form": ["内定する"]}
+{"original_tautological_form": "余分な贅肉", "non_tautological_form": ["贅肉"]}
+{"original_tautological_form": "存亡の危機", "non_tautological_form": ["存亡の機", "存続の危機"]}
