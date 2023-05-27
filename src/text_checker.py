@@ -12,7 +12,7 @@ from module_expression import overused_funcs, preparation, get_synonym
 from module_expression.config import POS_LIST
 
 
-def create_layout():
+def create_layout():  # サイドバー付きのページの基礎部分を作る
     st.set_page_config(layout="wide")  # ページの横幅をフルに使う
     uploaded_file = st.sidebar.file_uploader("📝テキストファイル", accept_multiple_files=False)
 
@@ -21,7 +21,7 @@ def create_layout():
         [
             "長すぎる文",
             "読点が多い文",
-            "読点がない文",
+            "読点がない部分",
             "冗長な表現",
             "重複している表現",
             "半角・全角",
@@ -38,11 +38,12 @@ def create_layout():
         "💬品詞（「使われすぎな表現」を選んだ時のみ有効・複数選択可）",
         POS_LIST,
     )
+    st.header("本文")
 
     return uploaded_file, show_element, hankaku_zenkaku, selected_items
 
 
-def prepare_tools_for_analysis():
+def prepare_tools_for_analysis():  # パターンマッチ用の辞書とトークナイザを用意する
     wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
     tautological_expression_dict = (
         tautological_funcs.create_tautological_expression_dict()
@@ -60,7 +61,7 @@ def get_args():
     return args
 
 
-def wrapper_function(
+def wrapper_function(  # 必要なものを受け取り、各機能に処理を渡す部分
     show_element,
     sentences,
     row_num,
@@ -73,25 +74,25 @@ def wrapper_function(
     element_to_func = {
         "長すぎる文": length_funcs.lengthy_checker,
         "読点が多い文": length_funcs.punctuation_num_checker,
-        "読点がない文": length_funcs.continuous_checker,
+        "読点がない部分": length_funcs.continuous_checker,
         "冗長な表現": wordy_funcs.wordy_expression_checker,
         "重複している表現": tautological_funcs.tautological_expression_checker,
         "半角・全角": appearance_funcs.appearance_checker,
         "使われすぎな表現": overused_funcs.overused_expression_checker,
     }
-    if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
+    if show_element in ["長すぎる文", "読点が多い文", "読点がない部分"]:  # 文章の読みやすさに関するもの
         annotated_text_list, text_position_list, advice_list = element_to_func[
             show_element
         ](sentences, row_num)
-    elif show_element in ["冗長な表現", "重複している表現"]:
+    elif show_element in ["冗長な表現", "重複している表現"]:  # 表現に関して改善案を提示する必要があるもの
         annotated_text_list, text_position_list, advice_list = element_to_func[
             show_element
         ](sentences, correspondence_dict[show_element], row_num)
-    elif show_element == "半角・全角":
+    elif show_element == "半角・全角":  # 体裁に関わるもの
         annotated_text_list, text_position_list, advice_list = element_to_func[
             show_element
         ](sentences, row_num, hankaku_zenkaku)
-    else:
+    else:  # 頻出語彙に関するもの
         (
             annotated_text_list,
             text_position_list,
@@ -102,13 +103,9 @@ def wrapper_function(
     return annotated_text_list, text_position_list, advice_list
 
 
-if __name__ == "__main__":
-    my_args = get_args()
-    uploaded_file, show_element, hankaku_zenkaku, selected_items = create_layout()
-
-    if selected_items == []:
-        selected_items = POS_LIST
-
+def annotate_and_show_body_text(  # 文章を分析した結果を返し、色付きの文章を表示する部分
+    file_name, uploaded_file, show_element, hankaku_zenkaku, selected_items
+):
     annotated_texts = []  # 画面に表示するテキスト群
     pos_list = []  # 指摘した文章の場所
     advices_list = []  # 指摘の具体的な内容
@@ -117,7 +114,7 @@ if __name__ == "__main__":
         tautological_expression_dict,
         tokenizer,
     ) = prepare_tools_for_analysis()
-    f_r = open(my_args.file_name, "r")
+    f_r = open(file_name, "r")
     text_lists = (
         uploaded_file.read().decode("utf-8").splitlines()
         if uploaded_file is not None
@@ -149,13 +146,24 @@ if __name__ == "__main__":
         advices_list += advice_list
         annotated_texts.append("  \n  \n")  # Streamlitは改行記号の前に半角スペースが2つ必要
 
-    st.header("本文")
     annotated_text(*annotated_texts)
+    return pos_list, advices_list, overused_parts
 
+
+if __name__ == "__main__":
+    my_args = get_args()
+    uploaded_file, show_element, hankaku_zenkaku, selected_items = create_layout()
+    selected_items = POS_LIST if selected_items == [] else selected_items
+
+    pos_list, advices_list, overused_parts = annotate_and_show_body_text(
+        my_args.file_name, uploaded_file, show_element, hankaku_zenkaku, selected_items
+    )
+
+    # 指摘する箇所とその内容を表示する
     with st.sidebar.expander(f"✅指摘箇所（{len(pos_list)}件）", expanded=True):
         if len(pos_list) == 0:
             st.write("指摘箇所はありません🤓")
-        if show_element in ["長すぎる文", "読点が多い文", "読点がない文", "半角・全角"]:
+        if show_element in ["長すぎる文", "読点が多い文", "読点がない部分", "半角・全角"]:
             for item in pos_list:
                 st.write(f"### {item[0]}  \n{item[1]}")
         elif show_element in ["冗長な表現", "重複している表現"]:
@@ -175,6 +183,7 @@ if __name__ == "__main__":
                     cand = "-"
                 st.write(f"### （{pos}）{expression}：{freq}回  \n  \n関連語：{cand}")
 
+    # ChatGPTに文章を渡す部分
     with st.form(key="my_form", clear_on_submit=True):
         with st.sidebar:
             INPUT_LIMIT_LENGTH = 300
