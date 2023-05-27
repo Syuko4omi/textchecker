@@ -19,7 +19,7 @@ def find_hankaku_kana(one_sentence: str) -> list[str]:
 
 
 def find_hankaku_kigou(one_sentence: str) -> list[str]:
-    point_out_list = re.findall("[ -/:-@\[-~]+", one_sentence)
+    point_out_list = re.findall("[!-/:-@[-`{-~]+", one_sentence)
     return point_out_list
 
 
