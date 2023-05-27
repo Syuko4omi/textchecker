@@ -18,7 +18,7 @@ def create_wordy_expression_dict(
         wordy_expressions.items(), key=lambda x: len(x[0]), reverse=True
     ):  # 「こと」よりも先に「ことができ」を拾いたいので、長いものから一致を探すためkey文字列の長い順にソートする
         sorted_wordy_expressions[key] = val
-    return wordy_expressions
+    return sorted_wordy_expressions
 
 
 def find_wordy_expression(

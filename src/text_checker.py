@@ -6,7 +6,8 @@ import sqlite3
 import gensim
 
 from module_length import length_funcs, proofread_with_chatgpt
-from module_wordy import wordy_funcs
+from module_wordy import wordy_funcs, tautological_funcs
+from module_appearance import appearance_funcs
 from module_expression import overused_funcs, preparation, get_synonym
 from module_expression.config import POS_LIST
 
@@ -16,7 +17,21 @@ def create_layout():
     uploaded_file = st.sidebar.file_uploader("📝テキストファイル", accept_multiple_files=False)
 
     show_element = st.sidebar.selectbox(
-        "⚙️表示する要素", ["長すぎる文", "読点が多い文", "読点がない文", "冗長な表現", "使われすぎな表現"]
+        "⚙️表示する要素",
+        [
+            "長すぎる文",
+            "読点が多い文",
+            "読点がない文",
+            "冗長な表現",
+            "重複している表現",
+            "半角・全角",
+            "使われすぎな表現",
+        ],
+    )
+
+    hankaku_zenkaku = st.sidebar.selectbox(
+        "🔤英数字・カナ・記号（「半角・全角」を選んだ時のみ有効）",
+        ["半角英数字", "全角英数字", "半角カタカナ", "半角記号"],
     )
 
     selected_items = st.sidebar.multiselect(
@@ -24,13 +39,16 @@ def create_layout():
         POS_LIST,
     )
 
-    return uploaded_file, show_element, selected_items
+    return uploaded_file, show_element, hankaku_zenkaku, selected_items
 
 
 def prepare_tools_for_analysis():
     wordy_expression_dict = wordy_funcs.create_wordy_expression_dict()
+    tautological_expression_dict = (
+        tautological_funcs.create_tautological_expression_dict()
+    )
     tokenizer = preparation.prepare_tokenizer()
-    return wordy_expression_dict, tokenizer
+    return wordy_expression_dict, tautological_expression_dict, tokenizer
 
 
 def get_args():
@@ -46,7 +64,8 @@ def wrapper_function(
     show_element,
     sentences,
     row_num,
-    wordy_expression_dict,
+    correspondence_dict,
+    hankaku_zenkaku,
     tokenizer,
     overused_parts,
     problematic_level_dict,
@@ -56,20 +75,22 @@ def wrapper_function(
         "読点が多い文": length_funcs.punctuation_num_checker,
         "読点がない文": length_funcs.continuous_checker,
         "冗長な表現": wordy_funcs.wordy_expression_checker,
+        "重複している表現": tautological_funcs.tautological_expression_checker,
+        "半角・全角": appearance_funcs.appearance_checker,
         "使われすぎな表現": overused_funcs.overused_expression_checker,
     }
     if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
         annotated_text_list, text_position_list, advice_list = element_to_func[
             show_element
         ](sentences, row_num)
-    elif show_element == "冗長な表現":
-        (
-            annotated_text_list,
-            text_position_list,
-            advice_list,
-        ) = element_to_func[
+    elif show_element in ["冗長な表現", "重複している表現"]:
+        annotated_text_list, text_position_list, advice_list = element_to_func[
             show_element
-        ](sentences, wordy_expression_dict, row_num)
+        ](sentences, correspondence_dict[show_element], row_num)
+    elif show_element == "半角・全角":
+        annotated_text_list, text_position_list, advice_list = element_to_func[
+            show_element
+        ](sentences, row_num, hankaku_zenkaku)
     else:
         (
             annotated_text_list,
@@ -83,7 +104,7 @@ def wrapper_function(
 
 if __name__ == "__main__":
     my_args = get_args()
-    uploaded_file, show_element, selected_items = create_layout()
+    uploaded_file, show_element, hankaku_zenkaku, selected_items = create_layout()
 
     if selected_items == []:
         selected_items = POS_LIST
@@ -91,7 +112,11 @@ if __name__ == "__main__":
     annotated_texts = []  # 画面に表示するテキスト群
     pos_list = []  # 指摘した文章の場所
     advices_list = []  # 指摘の具体的な内容
-    wordy_expression_dict, tokenizer = prepare_tools_for_analysis()
+    (
+        wordy_expression_dict,
+        tautological_expression_dict,
+        tokenizer,
+    ) = prepare_tools_for_analysis()
     f_r = open(my_args.file_name, "r")
     text_lists = (
         uploaded_file.read().decode("utf-8").splitlines()
@@ -103,13 +128,18 @@ if __name__ == "__main__":
         text_lists, tokenizer, pos_option=selected_items
     )
     problematic_level_dict = overused_funcs.overused_level_indicator(overused_parts)
+    correspondence_dict = {
+        "冗長な表現": wordy_expression_dict,
+        "重複している表現": tautological_expression_dict,
+    }
     for row_num, text in enumerate(text_lists):  # 改行ごとに文章を処理する
         sentences = re.split(r"(?<=。)", text)  # 同じ行にある複数の文章がある場合は分ける
         annotated_text_list, text_position_list, advice_list = wrapper_function(
             show_element,
             sentences,
             row_num,
-            wordy_expression_dict,
+            correspondence_dict,
+            hankaku_zenkaku,
             tokenizer,
             overused_parts,
             problematic_level_dict,
@@ -125,12 +155,12 @@ if __name__ == "__main__":
     with st.sidebar.expander(f"✅指摘箇所（{len(pos_list)}件）", expanded=True):
         if len(pos_list) == 0:
             st.write("指摘箇所はありません🤓")
-        if show_element in ["長すぎる文", "読点が多い文", "読点がない文"]:
+        if show_element in ["長すぎる文", "読点が多い文", "読点がない文", "半角・全角"]:
             for item in pos_list:
                 st.write(f"### {item[0]}  \n{item[1]}")
-        elif show_element == "冗長な表現":
+        elif show_element in ["冗長な表現", "重複している表現"]:
             for item, advice in zip(pos_list, advices_list):
-                st.write(f"### {item[0]}  \n冗長表現： {item[1]}  \n{advice}")
+                st.write(f"### {item[0]}  \n修正検討表現： {item[1]}  \n{advice}")
         else:
             conn = sqlite3.connect("./data/wnjpn.db")
             model = gensim.models.Word2Vec.load("./data/word2vec.gensim.model")
@@ -154,7 +184,7 @@ if __name__ == "__main__":
             style = st.radio(
                 "⚠️送信前に元の文体を選んでください。", ("常体（だ・である調）", "敬体（です・ます調）"), horizontal=True
             )
-            submit_button = st.form_submit_button(label="ChatGPTに送信")
+            submit_button = st.form_submit_button(label="ChatGPTに送信（1分あたり3回まで）")
             if submit_button:
                 if len(long_sentence) >= INPUT_LIMIT_LENGTH:
                     st.write(
