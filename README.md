@@ -79,7 +79,10 @@ poetry run streamlit run src/text_checker.py
 
 ### APIキーについて
 - この機能を利用するには、OpenAIのAPIキーが必要です。
-- OpenAIでアカウントを作成してAPIキーを取得したのち、環境変数としてOPENAI_API_KEYという名前で登録すると、この機能が使えるようになります。
+- OpenAIでアカウントを作成してAPIキーを取得したのち、環境変数としてOPENAI_API_KEYという名前で登録すると、この機能が使えるようになります。例えば以下のように~/.bashrcなどに設定してください。
+```
+export OPENAI_API_KEY=sk-xxx...xxx 
+```
 
 
 ## 注意事項
